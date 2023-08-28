@@ -144,7 +144,7 @@ public class GameController : MonoBehaviour
 
                 Restart();
             }
-
+            
             inGameScore.SetText(scoreLong.ToString());
             player.Rotate(round.x * Time.deltaTime, round.y * Time.deltaTime, round.z * Time.deltaTime);
             moving.transform.position += move * Time.deltaTime;
