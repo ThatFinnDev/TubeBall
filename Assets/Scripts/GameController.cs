@@ -131,7 +131,6 @@ public class GameController : MonoBehaviour
                     xRot += turnSpeed * Time.deltaTime;
                 else
                     xRot -= turnSpeed * Time.deltaTime;
-                
                 pipe.transform.rotation = Quaternion.Euler(xRot,0,90);
             }
             #endif
