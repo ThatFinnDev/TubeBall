@@ -9,6 +9,12 @@ public class Coin : MonoBehaviour
     private bool moveHigher = true;
     private Transform child;
 
+    public void ResetPosAndRot()
+    {
+        moveHigher = true;
+        child.localRotation = Quaternion.Euler(0,90,0);
+        child.transform.localPosition = new Vector3(lowestXPos,child.transform.localPosition.y,child.transform.localPosition.z);
+    }
     private void Awake() { child = transform.GetChild(0); }
 
     void Update()
@@ -33,6 +39,6 @@ public class Coin : MonoBehaviour
             }
         }
         
-        if(transform.position.x>=GameController.decoTPPosX) Destroy(gameObject);
+        if(transform.position.x>=GameController.decoTPPosX) CoinPooler.instance.AddToPool(gameObject);
     }
 }

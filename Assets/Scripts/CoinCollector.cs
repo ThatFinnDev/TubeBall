@@ -6,7 +6,7 @@ public class CoinCollector : MonoBehaviour
     {
         if (other.CompareTag("Coin"))
         {
-            Destroy(other.transform.parent.gameObject);
+            CoinPooler.instance.AddToPool(other.transform.parent.gameObject);
             GameController.coins++;
         }
     }

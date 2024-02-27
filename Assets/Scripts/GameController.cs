@@ -40,7 +40,6 @@ public class GameController : MonoBehaviour
     public GameObject panel;
     public GameObject inGameUtilites;
     public GameObject difficultyButton;
-    public GameObject coinPrefab;
     public static GameController instance;
 
     public Transform obstacles;
@@ -141,7 +140,8 @@ public class GameController : MonoBehaviour
                 float newRotation = Random.Range(0, 360);
                 for (int i = 0; i < coinCount; i++)
                 {
-                    GameObject coin = Instantiate(coinPrefab, coinsHolder);
+                    GameObject coin = CoinPooler.instance.RemoveFromPool(coinsHolder);
+                    coin.transform.SetParent(coinsHolder);
                     coin.transform.localPosition = new Vector3(0, moving.transform.position.x+(15 + (i*2)), 0);
                     coin.transform.Rotate(new Vector3(0,newRotation,0));
                     newRotation += Random.Range(-35, 35);
