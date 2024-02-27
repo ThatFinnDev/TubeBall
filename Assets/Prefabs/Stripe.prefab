@@ -7845,4 +7845,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1db0250c092e4c6e9eecb16cce7f424d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isObsitical: 0
+  isObstacle: 0

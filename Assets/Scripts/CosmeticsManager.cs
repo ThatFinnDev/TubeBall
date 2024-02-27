@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class CosmeticsManager : MonoBehaviour
 {
     public List<BuyableMaterial> buyables;
+    public List<BuyableMaterial> tubeBuyable;
     [Header("Other")] [SerializeField] Transform obstacles;
     [SerializeField] Transform stripes;
     [SerializeField] Transform dots;
@@ -15,22 +16,55 @@ public class CosmeticsManager : MonoBehaviour
     [SerializeField] RenderTexture dotRenderTexture;
     [SerializeField] RenderTexture stripeRenderTexture;
     [SerializeField] RenderTexture obstacleRenderTexture;
+    [SerializeField] RenderTexture tubeRenderTexture;
     [SerializeField] Renderer dotPreview;
     [SerializeField] Renderer stripePreview;
     [SerializeField] Renderer obstaclePreview;
+    [SerializeField] Renderer tubePreview;
+    [SerializeField] private List<Renderer> tubes;
     [SerializeField] private Image dotTexture;
     [SerializeField] private Image stripeTexture;
     [SerializeField] private Image obstacleTexture;
-
+    [SerializeField] private Image tubeTexture;
+    [SerializeField] private List<Camera> previewCameras;
     public static CosmeticsManager instance;
-    private bool refreshPreviews = false;
+
+    private bool refreshPreviews
+    {
+        get { return _refreshPreviews; }
+        set
+        {
+            if (value) foreach (Camera cam in previewCameras) cam.gameObject.SetActive(true);
+            else deActiveCamera = true;
+            _refreshPreviews = value;
+        }
+    }
+
+    private bool deActiveCamera = false;
+    private bool _refreshPreviews = false;
+
     private void Update()
+    {
+        if(GameController.instance.inGame)
+            foreach (BuyableMaterial buyableMaterial in tubeBuyable)
+                buyableMaterial.material.mainTextureOffset+= new Vector2(0,Time.timeScale*Time.deltaTime*(GameController.difficulty.speed/5));
+        
+    }
+
+    private void FixedUpdate()
     {
         if(refreshPreviews)
         {
             stripeTexture.sprite = ConvertToSprite(toTexture2D(stripeRenderTexture));
             dotTexture.sprite = ConvertToSprite(toTexture2D(dotRenderTexture));
             obstacleTexture.sprite = ConvertToSprite(toTexture2D(obstacleRenderTexture));
+            tubeTexture.sprite = ConvertToSprite(toTexture2D(tubeRenderTexture));
+            refreshPreviews = false;
+        }
+        else if (deActiveCamera)
+        {
+            foreach (Camera cam in previewCameras) cam.gameObject.SetActive(false);
+            deActiveCamera = false;
         }
     }
 
@@ -41,10 +75,17 @@ public class CosmeticsManager : MonoBehaviour
         ApplyObstacleColor();
         ApplyStripeColor();
         ApplyDotColor();
+        ApplyTubeColor();
     }
+
+    private void Start()
+    {
+        refreshPreviews = true;
+    }
+
     public static Texture2D toTexture2D(RenderTexture rTex)
     {
-        Texture2D tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
+        Texture2D tex = new Texture2D( rTex.width,  rTex.height, TextureFormat.RGBA32, false);
         RenderTexture.active = rTex;
         tex.ReadPixels(new Rect(0, 0, rTex.width, rTex.height), 0, 0);
         tex.Apply();
@@ -72,6 +113,10 @@ public class CosmeticsManager : MonoBehaviour
         ReGenerateBuyButton(SelectMaterialType.Stripe);
     }
 
+    public void ReTube()
+    {
+        ReGenerateBuyButton(SelectMaterialType.Tube);
+    }
     void ApplyObstacleColor()
     {
         var _index = Mathf.Clamp(PlayerPrefs.GetInt("color.obsticals", 0), 0, buyables.Count - 1);
@@ -102,6 +147,28 @@ public class CosmeticsManager : MonoBehaviour
         refreshPreviews = true;
     }
 
+    void ApplyTubeColor()
+    {
+        var _index = Mathf.Clamp(PlayerPrefs.GetInt("color.tubes", 0), 0, tubeBuyable.Count - 1);
+        foreach (Renderer child in tubes)
+            child.material = tubeBuyable[_index].material;
+        tubePreview.material = new Material(tubeBuyable[_index].material);
+        refreshPreviews = true;
+    }
+    public void ChangeTubeColor(Material material)
+    {
+        int i = -1;
+        foreach (BuyableMaterial buyable in tubeBuyable)
+        {
+            i++;
+            if (buyable.material == material)
+            {
+                PlayerPrefs.SetInt("color.tubes", i);
+                ApplyTubeColor();
+                return;
+            }
+        }
+    }
     public void ChangeDotColor(Material material)
     {
         int i = -1;
@@ -151,6 +218,11 @@ public class CosmeticsManager : MonoBehaviour
         refreshPreviews = true;
     }
     
+    public void ApplyPreviewTubeMaterial(Material material)
+    {
+        tubePreview.material = material;
+        refreshPreviews = true;
+    }
     public void ChangeObstacleColor(Material material)
     {
         int i = -1;
@@ -169,10 +241,14 @@ public class CosmeticsManager : MonoBehaviour
 
     public void ReGenerateBuyButton(SelectMaterialType selectedBuyType)
     {
+        refreshPreviews = true;
         shopSurTitle.SetText(selectedBuyType.ToString() + "s");
         foreach (Transform child in buyButtonHolder)
             Destroy(child.gameObject);
-        foreach (BuyableMaterial buyable in buyables)
+        List<BuyableMaterial> buyableMaterials = buyables;
+        if (selectedBuyType == SelectMaterialType.Tube)
+            buyableMaterials = tubeBuyable;
+        foreach (BuyableMaterial buyable in buyableMaterials)
         {
             GameObject buttonInstance = Instantiate(buyButtonPrefab, buyButtonHolder);
             SelectMaterial selectMaterial = buttonInstance.GetComponent<SelectMaterial>();

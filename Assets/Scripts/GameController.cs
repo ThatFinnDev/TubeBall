@@ -36,6 +36,7 @@ public class GameController : MonoBehaviour
     public GameObject pauseMenu;
     public GameObject pipe;
     public Transform player;
+    public Camera camera;
     public Transform moving;
     public GameObject panel;
     public GameObject inGameUtilites;
@@ -94,7 +95,7 @@ public class GameController : MonoBehaviour
         pauseMenu.SetActive(false);
         inGame = false;
 
-        foreach (Transform coin in coinsHolder) Destroy(coin.gameObject);
+        foreach (Transform coin in coinsHolder) CoinPooler.instance.AddToPool(coin.gameObject);
         
         moving.transform.position = movigPosition;
         foreach (Transform child in moving)if(child.name!="Coins") foreach (Transform thing in child) thing.GetComponent<MoveBack>().ResetInfo();

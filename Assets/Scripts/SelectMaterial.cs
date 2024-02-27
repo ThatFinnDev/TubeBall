@@ -37,6 +37,7 @@ public class SelectMaterial : MonoBehaviour
                 case SelectMaterialType.Obstacle: CosmeticsManager.instance.ChangeObstacleColor(material); break;
                 case SelectMaterialType.Dot: CosmeticsManager.instance.ChangeDotColor(material); break;
                 case SelectMaterialType.Stripe: CosmeticsManager.instance.ChangeStripeColor(material); break;
+                case SelectMaterialType.Tube: CosmeticsManager.instance.ChangeTubeColor(material); break;
             }
         }
         else if (GameController.coins >= cost)
@@ -53,6 +54,7 @@ public class SelectMaterial : MonoBehaviour
                 case SelectMaterialType.Obstacle: CosmeticsManager.instance.ApplyPreviewObstacleMaterial(material); break;
                 case SelectMaterialType.Dot: CosmeticsManager.instance.ApplyPreviewDotMaterial(material); break;
                 case SelectMaterialType.Stripe: CosmeticsManager.instance.ApplyPreviewStripeMaterial(material); break;
+                case SelectMaterialType.Tube: CosmeticsManager.instance.ApplyPreviewTubeMaterial(material); break;
             }
         }
         
@@ -62,5 +64,5 @@ public class SelectMaterial : MonoBehaviour
 
 public enum SelectMaterialType
 {
-    Obstacle, Dot, Stripe 
+    Obstacle, Dot, Stripe, Tube
 }
