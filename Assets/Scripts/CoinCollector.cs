@@ -8,6 +8,12 @@ public class CoinCollector : MonoBehaviour
         {
             CoinPooler.instance.AddToPool(other.transform.parent.gameObject);
             GameController.coins++;
+            GameController.totalCoins++;
+        }
+        else if (other.CompareTag("GoldRush"))
+        {
+            Destroy(other.gameObject);
+            GameController.instance.StartGoldRush(20f);
         }
     }
 }

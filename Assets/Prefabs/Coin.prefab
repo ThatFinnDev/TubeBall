@@ -45,10 +45,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5351e07fb7e934a2a1caf8a47e20377, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lowestXPos: -1.662
-  highestXPos: -1.4
-  moveSpeed: 0.1
-  rotationSpeed: 15
 --- !u!1001 &8417753591014544989
 PrefabInstance:
   m_ObjectHideFlags: 0

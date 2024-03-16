@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -10,7 +11,7 @@ public class GameController : MonoBehaviour
     public static long coins
     {
         get
-        { if (long.TryParse(PlayerPrefs.GetString("coins", "0"), out long _coins)) return _coins; return 0; }
+        { if (long.TryParse(PlayerPrefs.GetString("coins", "0"), out long _out)) return _out; return 0; }
         set
         {
             instance.moneyText.SetText(value.ToString());
@@ -18,6 +19,24 @@ public class GameController : MonoBehaviour
         }
     }
     
+    public static long totalCoins
+    {
+        get
+        { if (long.TryParse(PlayerPrefs.GetString("totalCoins", "0"), out long _out)) return _out; return 0; }
+        set
+        {
+            PlayerPrefs.SetString("totalCoins", value.ToString());
+        }
+    }
+    public static long totalGoldRush
+    {
+        get
+        { if (long.TryParse(PlayerPrefs.GetString("totalGoldRush", "0"), out long _out)) return _out; return 0; }
+        set
+        {
+            PlayerPrefs.SetString("totalGoldRush", value.ToString());
+        }
+    }
     public static long scoreLong;
     
     
@@ -42,7 +61,7 @@ public class GameController : MonoBehaviour
     public GameObject inGameUtilites;
     public GameObject difficultyButton;
     public static GameController instance;
-
+    public GameObject goldRushCollectorPrefab;
     public Transform obstacles;
     public Transform coinsHolder;
     public void SetDifficultyIndex(int index)
@@ -58,10 +77,24 @@ public class GameController : MonoBehaviour
     
     private void OnApplicationQuit() { PlayerPrefs.Save(); }
 
+    private bool firstTime = true;
     private void Awake()
     {
         instance = this;
-        GetComponent<Volume>().enabled = true;
+        if (PlayerPrefs.GetInt("firstTimeLaunchCompleted", 0) == 0)
+        {
+            PlayerPrefs.SetInt("firstTimeLaunchCompleted", 1);
+            if (PlayerPrefs.HasKey("coins"))
+                if(!PlayerPrefs.HasKey("totalCoins"))
+                {
+                    totalCoins = coins;
+                    totalCoins += GetComponent<CosmeticsManager>().GetSpendCoins();
+                }
+        }
+        PlayerPrefs.Save();
+        
+        if(firstTime) GetComponent<Volume>().enabled = true;
+        firstTime = false;
         selectedDifficulty = Mathf.Clamp(PlayerPrefs.GetInt("difficulty",0),0, difficulties.Length - 1);
         score.SetText(long.Parse(PlayerPrefs.GetString("score"+selectedDifficulty.ToString().Replace("0",""),"0")).ToString());
         highScore.SetText(long.Parse(PlayerPrefs.GetString("HighScore"+selectedDifficulty.ToString().Replace("0",""),"0")).ToString());
@@ -95,11 +128,24 @@ public class GameController : MonoBehaviour
         pauseMenu.SetActive(false);
         inGame = false;
 
-        foreach (Transform coin in coinsHolder) CoinPooler.instance.AddToPool(coin.gameObject);
+        foreach (Transform coin in coinsHolder) if(coin.CompareTag("Coin")) CoinPooler.instance.AddToPool(coin.gameObject);
+        foreach (Transform coin in coinsHolder) Destroy(coin.gameObject);
         
         moving.transform.position = movigPosition;
         foreach (Transform child in moving)if(child.name!="Coins") foreach (Transform thing in child) thing.GetComponent<MoveBack>().ResetInfo();
         
+    }
+
+    [SerializeField] private Transform entries;
+    private void Start()
+    {
+        foreach (Transform child in entries)
+        {
+            if (child.GetComponent<CheckEntry>() != null)
+                child.GetComponent<CheckEntry>().Start();
+            else if (child.GetComponent<SliderEntry>() != null)
+                child.GetComponent<SliderEntry>().Start();
+        }
     }
 
     private float xRot = 0;
@@ -125,20 +171,51 @@ public class GameController : MonoBehaviour
         inGameUtilites.SetActive(true);
         
     }
+
+    public bool goldRush = false;
+
+    private bool autoStopGoldRush = false;
+    private float stopGoldRushAt = 0f;
+    public void StartGoldRush(float howLong)
+    {
+        goldRush = true;
+        autoStopGoldRush = true;
+        stopGoldRushAt = scoreLong + howLong;
+        nextCoinSpawn = scoreLong += 2;
+        totalGoldRush++;
+        foreach (Transform obstacle in obstacles)
+        {
+            obstacle.GetComponent<BoxCollider>().enabled = false;
+            obstacle.GetComponent<MeshRenderer>().enabled = false;
+        }
+    }
     void Update()
     {
         #if UNITY_EDITOR
         if(Input.GetKeyDown(KeyCode.O))
             ScreenCapture.CaptureScreenshot(Application.persistentDataPath+"/"+System.DateTime.Now.ToString("yyyyMMddHHmmssffff")+".png");
+        if (Input.GetKeyDown(KeyCode.P))
+            StartGoldRush(20f);
         #endif
         if(inGame) if(Input.GetKeyDown(KeyCode.Escape)) if(paused) UnPause(); else Pause();
         if (inGame && !paused)
         {
-            if (scoreLong == nextCoinSpawn)
+            if (autoStopGoldRush)
             {
-                nextCoinSpawn += Random.Range(10, 15);
+                if (scoreLong >= stopGoldRushAt)
+                {
+                    goldRush = false;
+                    autoStopGoldRush = false;
+                    nextCoinSpawn=scoreLong+Random.Range(10, 15);
+                }
+            }
+            if (scoreLong >= nextCoinSpawn)
+            {
+                if (goldRush) nextCoinSpawn += 2;
+                else nextCoinSpawn += Random.Range(10, 15);
                 int coinCount = Random.Range(10, 25);
                 float newRotation = Random.Range(0, 360);
+                int last=0;
                 for (int i = 0; i < coinCount; i++)
                 {
                     GameObject coin = CoinPooler.instance.RemoveFromPool(coinsHolder);
@@ -146,7 +223,17 @@ public class GameController : MonoBehaviour
                     coin.transform.localPosition = new Vector3(0, moving.transform.position.x+(15 + (i*2)), 0);
                     coin.transform.Rotate(new Vector3(0,newRotation,0));
                     newRotation += Random.Range(-35, 35);
+                    last = i;
                 }
+
+                if (!goldRush)
+                    if(Random.Range(0, 25)==1)
+                    {
+                        last += 1; 
+                        GameObject goldRushCollector = Instantiate(goldRushCollectorPrefab, coinsHolder); 
+                        goldRushCollector.transform.localPosition = new Vector3(0, moving.transform.position.x+(15 + (last*2)), 0);
+                        goldRushCollector.transform.Rotate(new Vector3(0,newRotation,0));
+                    }
             }
             if (Input.GetKey(KeyCode.D))
             {
@@ -200,5 +287,6 @@ public class BuyableMaterial
 {
     public Material material;
     public long cost = 1000;
+    public bool notBuyable = false;
     public bool boughBuyDefault = false;
 }

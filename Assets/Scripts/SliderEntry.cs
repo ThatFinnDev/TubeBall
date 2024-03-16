@@ -9,10 +9,9 @@ public class SliderEntry : MonoBehaviour
     [SerializeField] private Slider slider;
     [SerializeField] private Button resetButton;
     [SerializeField] private string saveString;
-    private float defaultValue;
-    void Start()
+    [SerializeField] private float defaultValue;
+    public void Start()
     {
-        defaultValue = slider.value;
         if (slider.wholeNumbers) 
             slider.value = PlayerPrefs.GetInt("prefs."+saveString, int.Parse(defaultValue.ToString().Split(".")[0]));
         else

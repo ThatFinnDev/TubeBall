@@ -238,6 +238,24 @@ public class CosmeticsManager : MonoBehaviour
         }
     }
 
+    public long GetSpendCoins()
+    {
+        long totalSpendCoins = 0;
+        List<SelectMaterialType> allTypes = new List<SelectMaterialType>(){SelectMaterialType.Dot, SelectMaterialType.Obstacle, SelectMaterialType.Stripe, SelectMaterialType.Tube};
+        foreach (SelectMaterialType type in allTypes)
+        {
+            List<BuyableMaterial> buyableMaterials = buyables;
+            if (type == SelectMaterialType.Tube) buyableMaterials = tubeBuyable;
+            foreach (BuyableMaterial buyable in buyableMaterials)
+            {
+                if (buyable.notBuyable) continue;
+                bool bought = PlayerPrefs.GetInt("shop." + buyable.material.name + "."+(type.ToString()).ToLower(), 0) == 1;
+                if (buyable.boughBuyDefault) bought = false;
+                if (bought) totalSpendCoins += buyable.cost;
+            }
+        }
+        return totalSpendCoins;
+    }
 
     public void ReGenerateBuyButton(SelectMaterialType selectedBuyType)
     {
@@ -250,6 +268,7 @@ public class CosmeticsManager : MonoBehaviour
             buyableMaterials = tubeBuyable;
         foreach (BuyableMaterial buyable in buyableMaterials)
         {
+            if (buyable.notBuyable) continue;
             GameObject buttonInstance = Instantiate(buyButtonPrefab, buyButtonHolder);
             SelectMaterial selectMaterial = buttonInstance.GetComponent<SelectMaterial>();
             selectMaterial.material = buyable.material;
