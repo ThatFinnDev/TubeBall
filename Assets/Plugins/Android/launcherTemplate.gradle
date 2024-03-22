@@ -6,6 +6,7 @@ dependencies {
 
 android {
     ndkPath "**NDKPATH**"
+    namespace "**NAMESPACE**"
 
     compileSdkVersion **APIVERSION**
     buildToolsVersion '**BUILDTOOLS**'
@@ -58,5 +59,10 @@ android {
         abi {
             enableSplit = true
         }
+        texture {
+            enableSplit = true
+        }
     }
+
+	**GOOGLE_PLAY_DEPENDENCIES**
 }**SPLITS_VERSION_CODE****LAUNCHER_SOURCE_BUILD_SETUP**

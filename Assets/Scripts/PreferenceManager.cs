@@ -11,7 +11,7 @@ public static class PreferenceManager
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     public static void AfterSceneLoad()
     {
-        Application.targetFrameRate = 60;
+        //Application.targetFrameRate = 60;
     }
 
     private static bool isInLandscape = true;
