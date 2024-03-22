@@ -21,7 +21,7 @@ public class MoveBack : MonoBehaviour
        {
               if (transform.position.x >= (isObstacle?GameController.obstacleTPPosX:GameController.decoTPPosX))
               {
-                     transform.position = new Vector3(isObstacle?-60.02501f:-56.17501f, transform.position.y, isObstacle?((System.Convert.ToBoolean(Random.Range(0, 2))?-1:1)*Random.Range(GameController.difficulty.minOffset,GameController.difficulty.maxOffset)):transform.position.z);
+                     transform.position = new Vector3(isObstacle?transform.position.x-57:-56.17501f, transform.position.y, isObstacle?((System.Convert.ToBoolean(Random.Range(0, 2))?-1:1)*Random.Range(GameController.difficulty.minOffset,GameController.difficulty.maxOffset)):transform.position.z);
 
                      if (isObstacle)
                      {

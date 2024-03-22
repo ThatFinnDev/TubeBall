@@ -14,7 +14,9 @@ public class GameController : MonoBehaviour
         { if (long.TryParse(PlayerPrefs.GetString("coins", "0"), out long _out)) return _out; return 0; }
         set
         {
+            if (value < 0) value = 0;
             instance.moneyText.SetText(value.ToString());
+            if (DebugMenu.instance != null) DebugMenu.instance.coins.value.text = value.ToString();
             PlayerPrefs.SetString("coins", value.ToString());
         }
     }
@@ -25,6 +27,8 @@ public class GameController : MonoBehaviour
         { if (long.TryParse(PlayerPrefs.GetString("totalCoins", "0"), out long _out)) return _out; return 0; }
         set
         {
+            if (value < 0) value = 0;
+            if (DebugMenu.instance != null) DebugMenu.instance.totalCoins.value.text = value.ToString();
             PlayerPrefs.SetString("totalCoins", value.ToString());
         }
     }
@@ -34,6 +38,8 @@ public class GameController : MonoBehaviour
         { if (long.TryParse(PlayerPrefs.GetString("totalGoldRush", "0"), out long _out)) return _out; return 0; }
         set
         {
+            if (value < 0) value = 0;
+            if (DebugMenu.instance != null) DebugMenu.instance.totalGoldRush.value.text = value.ToString();
             PlayerPrefs.SetString("totalGoldRush", value.ToString());
         }
     }
@@ -75,7 +81,7 @@ public class GameController : MonoBehaviour
     Vector3 movigPosition { get { if (inGame) return new Vector3(moving.transform.position.x,0,0) + (new Vector3(difficulty.speed,0,0) * Time.deltaTime); return Vector3.zero; } }
 
     
-    private void OnApplicationQuit() { PlayerPrefs.Save(); }
+    private void OnApplicationQuit() { if(PreferenceManager.shouldSave) PlayerPrefs.Save(); }
 
     private bool firstTime = true;
     private void Awake()
@@ -100,6 +106,16 @@ public class GameController : MonoBehaviour
         highScore.SetText(long.Parse(PlayerPrefs.GetString("HighScore"+selectedDifficulty.ToString().Replace("0",""),"0")).ToString());
         difficultyButton.transform.GetChild(selectedDifficulty).gameObject.SetActive(true);
         instance.moneyText.SetText(coins.ToString());
+        
+        Screen.autorotateToPortraitUpsideDown = true;
+        Screen.autorotateToPortrait = true;
+        if(Debug.isDebugBuild)
+            if (DebugMenu.instance == null)
+            {
+                GameObject debugMenu = Resources.Load<GameObject>("DebugMenu");
+                GameObject obj = GameObject.Instantiate(debugMenu, Vector3.zero, Quaternion.identity, null);
+                GameObject.DontDestroyOnLoad(obj);
+            }
     }
 
     public void Play()
@@ -189,8 +205,14 @@ public class GameController : MonoBehaviour
             obstacle.GetComponent<MeshRenderer>().enabled = false;
         }
     }
+    ScreenOrientation lastOrientation;
     void Update()
     {
+        if(lastOrientation!=Screen.orientation)
+        {
+            lastOrientation = Screen.orientation;
+            PreferenceManager.OnOrientationChange(lastOrientation);
+        }
         #if UNITY_EDITOR
         if(Input.GetKeyDown(KeyCode.O))
             ScreenCapture.CaptureScreenshot(Application.persistentDataPath+"/"+System.DateTime.Now.ToString("yyyyMMddHHmmssffff")+".png");
@@ -227,7 +249,7 @@ public class GameController : MonoBehaviour
                 }
 
                 if (!goldRush)
-                    if(Random.Range(0, 25)==1)
+                    if(Random.Range(0, 7)==1)
                     {
                         last += 1; 
                         GameObject goldRushCollector = Instantiate(goldRushCollectorPrefab, coinsHolder); 
